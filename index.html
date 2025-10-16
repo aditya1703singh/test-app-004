@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simple To-Do List</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --accent: #22c55e;
+      --accent-2: #60a5fa;
+      --danger: #ef4444;
+      --border: #1f2937;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 20% -10%, #1f2937 0%, transparent 60%) no-repeat, var(--bg);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .app {
+      width: 100%;
+      max-width: 720px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    header {
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: rgba(2,6,23,0.3);
+      backdrop-filter: blur(6px);
+    }
+    header h1 {
+      font-size: 20px;
+      margin: 0;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    header h1 .dot {
+      width: 10px;
+      height: 10px;
+      background: linear-gradient(135deg, var(--accent), #16a34a);
+      border-radius: 50%;
+      box-shadow: 0 0 16px rgba(34,197,94,0.8);
+      display: inline-block;
+    }
+    .counter {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+      padding: 18px;
+      border-bottom: 1px dashed var(--border);
+      background: #0b1220;
+    }
+    .input-row input[type="text"] {
+      flex: 1;
+      padding: 14px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0a0f1c;
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .input-row input[type="text"]::placeholder { color: #6b7280; }
+    .input-row input[type="text"]:focus {
+      border-color: #334155;
+      box-shadow: 0 0 0 4px rgba(96,165,250,0.15);
+    }
+    .btn {
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #0b1220, #0a101b);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform .06s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+      user-select: none;
+    }
+    .btn:hover {
+      background: #121a2b;
+      border-color: #2a3445;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary {
+      background: linear-gradient(180deg, #1b3a2a, #132a1e);
+      border-color: #174a31;
+      color: #dcfce7;
+      box-shadow: 0 4px 16px rgba(34,197,94,0.18);
+    }
+    .btn.primary:hover {
+      background: linear-gradient(180deg, #205436, #18452a);
+      border-color: #1c7a49;
+    }
+
+    .list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 46px 16px;
+      font-size: 14px;
+      border-top: 1px dashed var(--border);
+    }
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-top: 1px solid rgba(31,41,55,0.6);
+      background: rgba(17,24,39,0.35);
+    }
+    .item:first-child { border-top: none; }
+    .item:hover { background: rgba(21,30,48,0.6); }
+    .checkbox {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 1px solid #2a3445;
+      background: #0a0f1c;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: border-color .12s ease, background .12s ease, box-shadow .12s ease;
+    }
+    .checkbox:focus { outline: none; box-shadow: 0 0 0 4px rgba(96,165,250,0.15); }
+    .checkbox::after {
+      content: "";
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      transform: scale(0);
+      transition: transform .1s ease;
+      background: linear-gradient(135deg, var(--accent), #16a34a);
+      box-shadow: 0 0 12px rgba(34,197,94,0.6) inset;
+    }
+    .checkbox:checked {
+      border-color: #1c7a49;
+      background: #0f1a15;
+    }
+    .checkbox:checked::after { transform: scale(1); }
+    .text {
+      flex: 1;
+      color: var(--text);
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .item.done .text {
+      color: #9ca3af;
+      text-decoration: line-through;
+    }
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0a0f1c;
+      color: #cbd5e1;
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease, transform .06s ease, color .15s ease;
+    }
+    .icon-btn:hover {
+      background: #131b2a;
+      border-color: #2a3445;
+      color: #f1f5f9;
+    }
+    .icon-btn.delete:hover {
+      background: #1b0f10;
+      border-color: #3b1418;
+      color: #fecaca;
+    }
+    .icon {
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+    }
+    footer {
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(2,6,23,0.3);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .muted-link {
+      color: #9ca3af;
+      text-decoration: none;
+      border-bottom: 1px dashed #334155;
+    }
+    .muted-link:hover { color: #e5e7eb; border-bottom-color: #64748b; }
+
+    @media (max-width: 520px) {
+      header { padding: 16px; }
+      .input-row { padding: 12px; }
+      .item { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Simple To-Do App">
+    <header>
+      <h1><span class="dot" aria-hidden="true"></span> To-Do</h1>
+      <div class="counter" id="counter" aria-live="polite"></div>
+    </header>
+
+    <form class="input-row" id="taskForm" autocomplete="off">
+      <label for="taskInput" class="visually-hidden" style="position:absolute;left:-9999px;">Add a new task</label>
+      <input type="text" id="taskInput" name="task" placeholder="What needs to be done?" maxlength="200" required />
+      <button type="submit" class="btn primary" id="addBtn" aria-label="Add task">Add</button>
+    </form>
+
+    <ul class="list" id="taskList" aria-live="polite" aria-label="Task list"></ul>
+    <div class="empty" id="emptyState">You have no tasks yet. Add your first one above!</div>
+
+    <footer>
+      <div>Keyboard: Enter to add • Space on checkbox to toggle</div>
+      <div>Data is stored locally in your browser.</div>
+    </footer>
+  </div>
+
+  <script>
+    // Simple To-Do logic with localStorage persistence
+    (function () {
+      const STORAGE_KEY = 'todo-tasks-v1';
+
+      const $ = (sel, parent = document) => parent.querySelector(sel);
+      const taskForm = $('#taskForm');
+      const taskInput = $('#taskInput');
+      const taskList = $('#taskList');
+      const emptyState = $('#emptyState');
+      const counter = $('#counter');
+
+      /** @type {{id:string,text:string,done:boolean,created:number}[]} */
+      let tasks = [];
+
+      function uid() {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      }
+
+      function load() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          tasks = raw ? JSON.parse(raw) : [];
+        } catch {
+          tasks = [];
+        }
+      }
+
+      function save() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      }
+
+      function addTask(text) {
+        const t = text.trim();
+        if (!t) return;
+        tasks.unshift({ id: uid(), text: t, done: false, created: Date.now() });
+        save();
+        render();
+      }
+
+      function removeTask(id) {
+        const i = tasks.findIndex(t => t.id === id);
+        if (i >= 0) {
+          tasks.splice(i, 1);
+          save();
+          render();
+        }
+      }
+
+      function toggleTask(id) {
+        const t = tasks.find(x => x.id === id);
+        if (t) {
+          t.done = !t.done;
+          save();
+          render();
+        }
+      }
+
+      function setCounter() {
+        const total = tasks.length;
+        const remaining = tasks.filter(t => !t.done).length;
+        counter.textContent = total
+          ? `${remaining} remaining of ${total}`
+          : 'No tasks';
+      }
+
+      function render() {
+        taskList.innerHTML = '';
+        if (tasks.length === 0) {
+          emptyState.style.display = 'block';
+          setCounter();
+          return;
+        }
+        emptyState.style.display = 'none';
+
+        const frag = document.createDocumentFragment();
+        tasks.forEach(task => {
+          const li = document.createElement('li');
+          li.className = 'item' + (task.done ? ' done' : '');
+          li.dataset.id = task.id;
+
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.className = 'checkbox';
+          checkbox.checked = task.done;
+          checkbox.setAttribute('aria-label', 'Mark as done');
+
+          const span = document.createElement('span');
+          span.className = 'text';
+          span.textContent = task.text;
+
+          const actions = document.createElement('div');
+          actions.className = 'actions';
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'icon-btn delete';
+          delBtn.type = 'button';
+          delBtn.setAttribute('aria-label', 'Delete task');
+          delBtn.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m3 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+          actions.appendChild(delBtn);
+          li.appendChild(checkbox);
+          li.appendChild(span);
+          li.appendChild(actions);
+          frag.appendChild(li);
+        });
+        taskList.appendChild(frag);
+        setCounter();
+      }
+
+      // Event Listeners
+      taskForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const value = taskInput.value.trim();
+        if (!value) {
+          taskInput.focus();
+          return;
+        }
+        addTask(value);
+        taskInput.value = '';
+        taskInput.focus();
+      });
+
+      // Delegated events for toggle and delete
+      taskList.addEventListener('change', (e) => {
+        const target = e.target;
+        if (target && target.classList.contains('checkbox')) {
+          const id = target.closest('.item')?.dataset.id;
+          if (id) toggleTask(id);
+        }
+      });
+      taskList.addEventListener('click', (e) => {
+        const btn = e.target.closest('.icon-btn.delete');
+        if (btn) {
+          const id = btn.closest('.item')?.dataset.id;
+          if (id) removeTask(id);
+        }
+      });
+
+      // Initialize
+      load();
+      render();
+      // Accessibility: ensure input is focused initially
+      setTimeout(() => taskInput.focus(), 0);
+    })();
+  </script>
+</body>
+</html>
